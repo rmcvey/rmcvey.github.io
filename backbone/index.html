@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+	<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />
+	<style>
+	#selected{
+		min-height: 500px;
+		border-left: 1px solid #eee;
+	}
+	#registry-items{
+		padding-left:0px;
+	}
+	#registry-items li{
+		clear:both;
+		margin-bottom:20px;
+		padding-bottom:10px;
+		border-bottom:1px solid #eee;
+	}
+	#cart li{
+		margin-bottom:5px;
+		padding-bottom:5px;
+	}
+	#registry-items .quantity-cost{
+		margin-top:20px;
+	}
+	</style>
+</head>
+<body>
+	<div class="container" id="registryapp">
+		<header>
+			<h1>Gift Registry <small>John &amp; Jane Doe</small> <div class="pull-right">
+				<button id="refresh" class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span></button>
+			</div></h1>
+			<div class="clearfix"></div>
+			<hr />
+		</header>
+		<section id="main">
+			<div class="col-md-8">
+				<ul id="registry-items" class="list-unstyled"></ul>
+			</div>
+			<div class="col-md-4" id="selected">
+				<h3>Cart</h3><hr />
+				<ul id="cart" class="list-unstyled">
+					<li id="no-items">
+						<p class="text-muted">No items added yet</p>
+					</li>
+				</ul>
+			</div>
+		</section>
+	</div>
+	<script type="text/template" id="item-template">
+		<div class="row">
+			<div class="col-xs-2">
+				<img class="img-responsive" src="<%- image %>">
+			</div>
+			<div class="col-xs-6">
+				<h4 class="product-name"><strong><%- title %></strong></h4>
+				<h4><small><%- description %></small></h4>
+			</div>
+			<div class="col-xs-4 quantity-cost">
+				<div class="col-xs-6 text-right">
+					<h6><strong><%- price %> <span class="text-muted">x</span></strong></h6>
+				</div>
+				<div class="col-xs-4">
+					<input type="text" class="form-control input-sm" value="1">
+				</div>
+				<div class="col-xs-2">
+					<button type="button" class="btn btn-link btn-xs add">
+						<span class="glyphicon glyphicon-plus"> </span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</script>
+	<script type="text/template" id="cart-template">
+		<div class="row">
+			<div class="col-xs-2">
+				<img class="img-responsive" src="<%- image %>">
+			</div>
+			<div class="col-xs-6">
+				<h5 class="product-name"><strong><%- title %></strong></h5>
+			</div>
+			<div class="col-xs-4 quantity-cost">
+				<div class="col-xs-6 text-right">
+					<h6><strong><%- price %><span class="text-muted">x</span>1</strong></h6>
+				</div>
+			</div>
+		</div>
+	</script>
+	<script src="dist/libs.js"></script>
+	<script src="js/application.js"></script>
+</body>
+</html>
