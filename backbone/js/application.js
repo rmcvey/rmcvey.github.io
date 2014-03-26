@@ -34,11 +34,11 @@ $(function(){
 
     // Filter down the list of all registry items that are finished.
     done: function() {
-      return this.where({done: true});
+      return this.where({purchased: true});
     },
     // Filter down the list to only registry items that are still not finished.
     remaining: function() {
-      return this.where({done: false});
+      return this.where({purchased: false});
     },
     // We keep the Registry items in sequential order, despite being saved by unordered
     // GUID in the database. This generates the next order number for new items.
@@ -46,85 +46,74 @@ $(function(){
       if (!this.length) return 1;
       return this.last().get('order') + 1;
     },
-
     // Registry are sorted by their original insertion order.
     comparator: 'order'
-
   });
+
+	var CartList = Backbone.Collection.extend({
+		model: RegistryItem,
+		url: '#',
+		done: function(){
+			return this.where({purchased: true})
+		}
+	});
 
   // Create our global collection of **Registry**.
   var Registry = new RegistryList;
+	var Cart = new CartList;
+
+	var CartView = Backbone.View.extend({
+		tagName: 'li',
+		template: _.template($('#cart-template').html()),
+		events: {
+			'click button.delete': 'remove'
+		},
+		remove: function(e){
+			$(e.target).closest('.row').remove();
+			if(this.$el.find('div.row').size() == 0){
+				this.$el.find('#no-items').show();
+			}
+			e.preventDefault();
+			return false;
+		},
+		initialize: function(){
+			this.listenTo(this.model, 'destroy', this.remove);
+		},
+		render: function(){
+			this.$el.find('#no-items').hide();
+			this.$el.append(this.template(this.model.toJSON()));
+		}
+	});
 
   // Registry Item View
   // --------------
 
   // The DOM element for a registry item...
   var RegistryView = Backbone.View.extend({
-
     //... is a list tag.
     tagName:  "li",
-
     // Cache the template function for a single item.
     template: _.template($('#item-template').html()),
-
     // The DOM events specific to an item.
     events: {
       "click .add"			: "toggleAdded",
-      "click a.destroy" : "clear",
-      "keypress .edit"  : "updateOnEnter",
-      "blur .edit"      : "close"
+      "click a.delete" :  "clear"
     },
-
-    // The RegistryView listens for changes to its model, re-rendering. Since there's
-    // a one-to-one correspondence between a **Registry** and a **RegistryView** in this
-    // app, we set a direct reference on the model for convenience.
     initialize: function() {
       this.listenTo(this.model, 'change', this.render);
       this.listenTo(this.model, 'destroy', this.remove);
     },
-
-    // Re-render the titles of the registry item.
-    render: function() {
-      this.$el.html(this.template(this.model.toJSON()));
-      this.$el.toggleClass('purchased', this.model.get('purchased'));
-      this.input = this.$('.edit');
-      return this;
-    },
-
-    // Toggle the `"done"` state of the model.
-    toggleDone: function() {
-      this.model.toggle();
-    },
-		// add item to "cart"
-		toggleAdded: function() {
-			var _cart_template = _.template($('#cart-template').html());
-			var html = _cart_template(this.model.toJSON());
-			$('li#no-items').addClass('hide');
-			$('#cart').append(html);
+		remove: function(){
+			this.clear();
 		},
-    // Switch this view into `"editing"` mode, displaying the input field.
-    edit: function() {
-      this.$el.addClass("editing");
-      this.input.focus();
-    },
-
-    // Close the `"editing"` mode, saving changes to the registry.
-    close: function() {
-      var value = this.input.val();
-      if (!value) {
-        this.clear();
-      } else {
-        this.model.save({title: value});
-        this.$el.removeClass("editing");
-      }
-    },
-
-    // If you hit `enter`, we're through editing the item.
-    updateOnEnter: function(e) {
-      if (e.keyCode == 13) this.close();
-    },
-
-    // Remove the item, destroy the model.
+		render: function() {
+			this.$el.html(this.template(this.model.toJSON()));
+			return this;
+		},
+		toggleAdded: function() {
+			var cartitem = new CartView({ model: this.model, el: '#cart' });
+			cartitem.render();
+		},
     clear: function() {
       this.model.destroy();
     }
@@ -144,8 +133,6 @@ $(function(){
     // Delegated events for creating new items, and clearing completed ones.
     events: {
       "keypress #new-registry":  "createOnEnter",
-      "click #clear-completed": "clearCompleted",
-      "click #toggle-all": "toggleAllComplete"
     },
 
     // At initialization we bind to the relevant events on the `Registry`
@@ -221,29 +208,7 @@ $(function(){
     // Add all items in the **Registry** collection at once.
     addAll: function() {
       Registry.each(this.addOne, this);
-    },
-
-    // If you hit return in the main input field, create new **Registry** model,
-    // persisting it to *localStorage*.
-    createOnEnter: function(e) {
-      if (e.keyCode != 13) return;
-      if (!this.input.val()) return;
-
-      Registry.create({title: this.input.val()});
-      this.input.val('');
-    },
-
-    // Clear all done registry items, destroying their models.
-    clearCompleted: function() {
-      _.invoke(Registry.done(), 'destroy');
-      return false;
-    },
-
-    toggleAllComplete: function () {
-      var done = this.allCheckbox.checked;
-      Registry.each(function (item) { item.save({'purchased': purchased}); });
     }
-
   });
 
   // Finally, we kick things off by creating the **App**.
